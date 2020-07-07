@@ -1,0 +1,9 @@
+export PATH="${PWD}/third_party/litex/litex/tools:$PATH"
+
+directories=(flash_proxies litedram liteeth liteiclink litepcie litesata litescope liteusb litevideo litex litex-boards litex-renode migen nmigen)
+
+export PYTHONPATH="${PWD}/third_party/edid-decode"
+for directory in "${directories[@]}";
+do 
+    export PYTHONPATH="$PYTHONPATH:${PWD}/third_party/$directory"
+done
