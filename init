@@ -1,6 +1,6 @@
 export PATH="${PWD}/third_party/litex/litex/tools:$PATH"
 
-directories=(flash_proxies litedram liteeth liteiclink litepcie litesata litescope liteusb litevideo litex litex-boards litex-renode migen nmigen)
+directories=(flash_proxies litedram liteeth liteiclink litepcie litesata litescope liteusb litevideo litex litex-boards litex-renode migen nmigen pythondata-cpu-vexriscv pythondata-software-compiler_rt)
 
 export PYTHONPATH="${PWD}/third_party/edid-decode"
 for directory in "${directories[@]}";

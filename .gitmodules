@@ -46,3 +46,9 @@
 [submodule "litesata"]
 	path = litesata
 	url = https://github.com/enjoy-digital/litesata.git
+[submodule "third_party/pythondata-cpu-vexriscv"]
+	path = third_party/pythondata-cpu-vexriscv
+	url = https://github.com/litex-hub/pythondata-cpu-vexriscv
+[submodule "third_party/pythondata-software-compiler_rt"]
+	path = third_party/pythondata-software-compiler_rt
+	url = https://github.com/litex-hub/pythondata-software-compiler_rt.git
