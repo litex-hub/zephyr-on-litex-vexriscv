@@ -13,9 +13,11 @@ class Board:
     def __init__(self, soc_cls):
         self.soc_cls = soc_cls
         self.mmcm_freq = {}
+        self.bitstream_ext=""
 
-    def load(self):
-        raise NotImplementedError
+    def load(self, soc, filename):
+        prog = soc.platform.create_programmer()
+        prog.load_bitstream(filename)
 
     def flash(self):
         raise NotImplementedError
@@ -30,27 +32,7 @@ class Arty(Board):
             "i2s_rx" :  11.289e6,
             "i2s_tx" :  22.579e6,
         }
-
-    def load(self):
-        from litex.build.openocd import OpenOCD
-        prog = OpenOCD("prog/openocd_xilinx.cfg")
-        prog.load_bitstream("build/arty/gateware/arty.bit")
-
-    def flash(self):
-        flash_regions = {
-            "buildroot/Image.fbi":             "0x00000000", # Linux Image: copied to 0xc0000000 by bios
-            "buildroot/rootfs.cpio.fbi":       "0x00500000", # File System: copied to 0xc0800000 by bios
-            "buildroot/rv32.dtb.fbi":          "0x00d00000", # Device tree: copied to 0xc1000000 by bios
-            "emulator/emulator.bin.fbi":       "0x00e00000", # MM Emulator: copied to 0x20000000 by bios
-        }
-        from litex.build.openocd import OpenOCD
-        prog = OpenOCD("prog/openocd_xilinx.cfg",
-            flash_proxy_basename="prog/bscan_spi_xc7a35t.bit")
-        prog.set_flash_proxy_dir(".")
-        for filename, base in flash_regions.items():
-            base = int(base, 16)
-            print("Flashing {} at 0x{:08x}".format(filename, base))
-            prog.flash(base, filename)
+        self.bitstream_ext=".bit"
 
 # Main ---------------------------------------------------------------------------------------------
 
@@ -67,8 +49,7 @@ def main():
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--board", required=True, help="FPGA board")
     parser.add_argument("--build", action="store_true", help="build bitstream")
-    parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM)")
-    parser.add_argument("--flash", action="store_true", help="flash bitstream/images (to SPI Flash)")
+    parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s")
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm")
@@ -109,10 +90,7 @@ def main():
         builder.build()
 
         if args.load:
-            board.load()
-
-        if args.flash:
-            board.flash()
+            board.load(soc, filename=os.path.join(build_dir, "gateware", "arty" + board.bitstream_ext))
 
 if __name__ == "__main__":
     main()
