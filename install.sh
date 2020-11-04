@@ -11,7 +11,6 @@ then
 fi
 
 mkdir -p "$CONDA_DIR"
-export HOME=$CONDA_DIR
 
 wget --no-verbose --continue https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 chmod a+x ./Miniconda3-latest-Linux-x86_64.sh
