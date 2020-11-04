@@ -1,4 +1,5 @@
 export PATH="${PWD}/third_party/litex/litex/tools:$PATH"
+export PATH="${PWD}/tools/conda/bin:$PATH"
 
 directories=(flash_proxies litedram liteeth liteiclink litepcie litesata litescope liteusb litevideo litex litex-boards litex-renode migen nmigen pythondata-cpu-vexriscv pythondata-software-compiler_rt)
 
