@@ -52,6 +52,11 @@ def main():
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s")
+    parser.add_argument("--with_spi", action="store_true", help="Enable spi")
+    parser.add_argument("--with_i2c", action="store_true", help="Enable i2c")
+    parser.add_argument("--with_pwm", action="store_true", help="Enable pwm")
+    parser.add_argument("--spi-data-width", type=int, default=8,      help="SPI data width (maximum transfered bits per xfer)")
+    parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency")
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server")
@@ -73,12 +78,21 @@ def main():
             soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
         if args.with_mmcm:
             soc.add_mmcm(board.mmcm_freq)
+        if args.with_pwm:
+            soc.add_rgb_led()
+        if args.with_spi:
+            soc.add_spi(args.spi_data_width, args.spi_clk_freq)
+        if args.with_i2s:
+            soc.add_i2c()
         if args.with_i2s:
             if not args.with_mmcm:
                 print("Adding mmcm implicitly, cause i2s core needs special clk signals")
                 soc.add_mmcm(board.mmcm_freq)
             soc.add_i2s()
-
+        # this is temporary hack, cause the ddrphy address can be
+        # forced with csr_map
+        if board_name == "arty":
+            soc.csr.locs["ddrphy"]=23
         build_dir = os.path.join("build", board_name)
         if args.build:
             builder = Builder(soc, output_dir=build_dir,

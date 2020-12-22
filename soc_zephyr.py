@@ -14,11 +14,15 @@ from litex.soc.integration.soc_sdram import *
 from litex.soc.integration.builder import *
 from litex.soc.cores.i2s import *
 from litex.soc.cores.gpio import *
+from litex.soc.cores.pwm import PWM
+from litex.soc.cores.spi import SPIMaster
+from litex.soc.cores.bitbang import I2CMaster
 from litex_boards.platforms import arty as arty_platform
 from litex.soc.interconnect import wishbone
+from litex.build.generic_platform import *
+from litex.soc.cores.gpio import GPIOOut, GPIOIn
 
 from litedram.modules import MT41K128M16
-from litedram.phy import s7ddrphy
 
 from liteeth.phy.mii import LiteEthPHYMII
 
@@ -43,18 +47,24 @@ def SoCZephyr(soc_cls, **kwargs):
         csr_map = {**soc_cls.csr_map, **{
             "ctrl":       0, # addr: 0xe0000000
             "uart":       3, # addr: 0xe0001800
+            "spi":        4, # addr: 0xe0002000
             "timer0":     5, # addr: 0xe0002800
-            "ethphy":     14, # addr: 0xe0007000
+            "sdram":      6, # addr: 0xe0003000
+            "uartphy":    7, # addr: 0xe0004000
+            "mmcm":       9, # addr: 0xe0004800
+            "i2c0":       10, # addr: 0xe0005000
+            "rgb_led_r0": 14, # addr: 0xe0007000
+            "ethphy":     16, # addr: 0xe0008000
             "ethmac":     19, # addr: 0xe0009800
             "i2s_rx":     21, # addr: 0xe000a800
             "i2s_tx":     22, # addr: 0xe000b000
+            #"ddrphy":    23, # addr: 0xe000b800
         }}
 
         interrupt_map = {**soc_cls.interrupt_map, **{
             "timer0":     1,
             "uart":       2,
             "ethmac":     3,
-            "spi":        5,
             "i2s_rx":     6,
             "i2s_tx":     7,
         }}
@@ -82,12 +92,17 @@ def SoCZephyr(soc_cls, **kwargs):
             soc_cls.mem_map.update(self.mem_map)
 
         def add_spi(self, data_width, spi_clk_freq):
-            spi_pads = self.platform.request("spi")
-            self.add_csr("spi")
+            spi_pads = self.platform.request("spi", 0)
             self.submodules.spi = SPIMaster(spi_pads, data_width, self.clk_freq, spi_clk_freq)
 
+        def add_rgb_led(self):
+            rgb_led_pads = self.platform.request("rgb_led", 0)
+            setattr(self.submodules, "rgb_led_r0", PWM(getattr(rgb_led_pads, 'r')))
+        
+        def add_i2c(self):
+            self.submodules.i2c0 = I2CMaster(self.platform.request("i2c", 0))
+
         def add_i2s(self):
-            # I2S --------------------------------------------------------------------------------------
             i2s_mem_size = 0x40000
             # i2s rx
             self.submodules.i2s_rx = S7I2S(
@@ -134,7 +149,6 @@ def SoCZephyr(soc_cls, **kwargs):
                 self.mmcm.create_clkout(self.cd_mmcm_clkout[key], self.clk_freq)
 
             self.mmcm.expose_drp()
-            self.add_csr("mmcm")
 
             self.comb += self.mmcm.reset.eq(self.mmcm.drp_reset.re)
 
