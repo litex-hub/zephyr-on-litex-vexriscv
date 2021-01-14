@@ -49,6 +49,7 @@ def main():
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--board", required=True, help="FPGA board")
     parser.add_argument("--build", action="store_true", help="build bitstream")
+    parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s")
@@ -67,12 +68,17 @@ def main():
     else:
         args.board = args.board.lower()
         board_names = [args.board.replace(" ", "_")]
+
+    soc_kwargs = {"integrated_rom_size": 0xfa00}
+    if args.variant is not None:
+        soc_kwargs.update(cpu_variant=args.variant)
+
     for board_name in board_names:
         if board_name not in supported_boards:
             print("Board {} is not supported currently".format(board_name))
             continue
         board = supported_boards[board_name]()
-        soc_kwargs = {"integrated_rom_size": 0xfa00}
+
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
         if args.with_ethernet:
             soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
