@@ -73,7 +73,6 @@ def SoCZephyr(soc_cls, **kwargs):
             "rom":          0x00000000,
             "sram":         0x01000000,
             "main_ram":     0x40000000,
-            "emulator_ram": 0x20000000,
             "ethmac":       0xb0000000,
             "i2s_rx":       0xb1000000,
             "i2s_tx":       0xb2000000,
@@ -84,12 +83,10 @@ def SoCZephyr(soc_cls, **kwargs):
             soc_cls.__init__(self,
                 cpu_type="vexriscv",
                 cpu_variant=cpu_variant,
+                csr_data_width=8,
                 max_sdram_size=0x10000000, # Limit mapped SDRAM to 256MB for now
                 **kwargs)
             self.platform.add_extension(arty_platform._i2s_pmod_io)
-            # machine mode emulator ram
-            self.submodules.emulator_ram = wishbone.SRAM(0x4000)
-            self.register_mem("emulator_ram", self.mem_map["emulator_ram"], self.emulator_ram.bus, 0x4000)
             soc_cls.mem_map.update(self.mem_map)
 
         def add_spi(self, data_width, spi_clk_freq):
