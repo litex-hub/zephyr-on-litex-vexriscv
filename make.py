@@ -88,17 +88,13 @@ def main():
             soc.add_rgb_led()
         if args.with_spi:
             soc.add_spi(args.spi_data_width, args.spi_clk_freq)
-        if args.with_i2s:
+        if args.with_i2c:
             soc.add_i2c()
         if args.with_i2s:
             if not args.with_mmcm:
                 print("Adding mmcm implicitly, cause i2s core needs special clk signals")
                 soc.add_mmcm(board.mmcm_freq)
             soc.add_i2s()
-        # this is temporary hack, cause the ddrphy address can be
-        # forced with csr_map
-        if board_name == "arty":
-            soc.csr.locs["ddrphy"]=23
         build_dir = os.path.join("build", board_name)
         if args.build:
             builder = Builder(soc, output_dir=build_dir,
@@ -110,7 +106,7 @@ def main():
         builder.build()
 
         if args.load:
-            board.load(soc, filename=os.path.join(build_dir, "gateware", "arty" + board.bitstream_ext))
+            board.load(soc, filename=os.path.join(build_dir, "gateware", "digilent_arty" + board.bitstream_ext))
 
 if __name__ == "__main__":
     main()
