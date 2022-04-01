@@ -98,7 +98,8 @@ def SoCZephyr(soc_cls, **kwargs):
                 pads=self.platform.request("i2s_rx"),
                 sample_width=24,
                 frame_format=I2S_FORMAT.I2S_STANDARD,
-                concatenate_channels=False
+                concatenate_channels=False,
+                toolchain=kwargs["toolchain"]
             )
             self.add_memory_region("i2s_rx", self.mem_map_zephyr["i2s_rx"], i2s_mem_size, type="io")
             self.add_wb_slave(self.mem_regions["i2s_rx"].origin, self.i2s_rx.bus, i2s_mem_size)
@@ -108,7 +109,8 @@ def SoCZephyr(soc_cls, **kwargs):
                 sample_width=24,
                 frame_format=I2S_FORMAT.I2S_STANDARD,
                 master=True,
-                concatenate_channels=False
+                concatenate_channels=False,
+                toolchain=kwargs["toolchain"]
             )
             self.add_memory_region("i2s_tx", self.mem_map_zephyr["i2s_tx"], i2s_mem_size, type="io")
             self.add_wb_slave(self.mem_regions["i2s_tx"].origin, self.i2s_tx.bus, i2s_mem_size)
