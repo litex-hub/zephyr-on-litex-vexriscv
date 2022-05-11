@@ -73,7 +73,7 @@ def SoCZephyr(soc_cls, **kwargs):
             soc_cls.__init__(self,
                 cpu_type="vexriscv",
                 cpu_variant=cpu_variant,
-                csr_data_width=8,
+                csr_data_width=32,
                 max_sdram_size=0x10000000, # Limit mapped SDRAM to 256MB for now
                 timer_uptime=True,
                 **kwargs)

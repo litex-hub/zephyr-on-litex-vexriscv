@@ -56,7 +56,7 @@ def main():
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s")
-    parser.add_argument("--sys-clk-freq", default=80e6, help="System clock frequency.")
+    parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
     parser.add_argument("--with_spi", action="store_true", help="Enable spi")
     parser.add_argument("--with_i2c", action="store_true", help="Enable i2c")
     parser.add_argument("--with_pwm", action="store_true", help="Enable pwm")
