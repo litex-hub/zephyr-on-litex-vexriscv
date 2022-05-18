@@ -49,7 +49,7 @@ def main():
         description += "- " + name + "\n"
     from litex.soc.integration.soc import LiteXSoCArgumentParser
     parser = LiteXSoCArgumentParser(description="LiteX SoC on Arty A7")
-    parser.add_argument("--toolchain", default="vivado", help="FPGA toolchain (vivado, symbiflow or yosys+nextpnr).")
+    parser.add_argument("--toolchain", default="symbiflow", help="FPGA toolchain (vivado, symbiflow or yosys+nextpnr).")
     parser.add_argument("--board", required=True, help="FPGA board")
     parser.add_argument("--build", action="store_true", help="build bitstream")
     parser.add_argument("--variant", default=None, help="FPGA board variant")

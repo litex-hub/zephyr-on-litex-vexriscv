@@ -39,7 +39,7 @@ conda activate $FPGA_FAM
 ```
 * Finally build the bitstream:
 ```bash
-./make.py --board=arty --build --toolchain=symbiflow
+./make.py --board=arty --build
 ```
 
 Build options
