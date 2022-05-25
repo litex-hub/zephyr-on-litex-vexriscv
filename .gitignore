@@ -1,2 +1,4 @@
 tools
 build
+prog
+__pycache__

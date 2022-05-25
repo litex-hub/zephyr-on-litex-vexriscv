@@ -3,7 +3,8 @@
 import argparse
 import os
 
-from litex.soc.integration.builder import Builder
+from litex.build.xilinx.vivado import vivado_build_args, vivado_build_argdict
+from litex.soc.integration.builder import *
 
 from soc_zephyr import SoCZephyr
 
@@ -46,13 +47,16 @@ def main():
     description += "Available boards:\n"
     for name in supported_boards.keys():
         description += "- " + name + "\n"
-    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
+    from litex.soc.integration.soc import LiteXSoCArgumentParser
+    parser = LiteXSoCArgumentParser(description="LiteX SoC on Arty A7")
+    parser.add_argument("--toolchain", default="symbiflow", help="FPGA toolchain (vivado, symbiflow or yosys+nextpnr).")
     parser.add_argument("--board", required=True, help="FPGA board")
     parser.add_argument("--build", action="store_true", help="build bitstream")
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s")
+    parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
     parser.add_argument("--with_spi", action="store_true", help="Enable spi")
     parser.add_argument("--with_i2c", action="store_true", help="Enable i2c")
     parser.add_argument("--with_pwm", action="store_true", help="Enable pwm")
@@ -61,6 +65,8 @@ def main():
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server")
+    builder_args(parser)
+    vivado_build_args(parser)
     args = parser.parse_args()
 
     if args.board == "all":
@@ -70,8 +76,13 @@ def main():
         board_names = [args.board.replace(" ", "_")]
 
     soc_kwargs = {"integrated_rom_size": 0xfa00}
+    soc_kwargs.update(toolchain=args.toolchain)
+    soc_kwargs.update(with_jtagbone=False)
+
     if args.variant is not None:
         soc_kwargs.update(cpu_variant=args.variant)
+    if args.sys_clk_freq is not None:
+        soc_kwargs.update(sys_clk_freq=int(float(args.sys_clk_freq)))
 
     for board_name in board_names:
         if board_name not in supported_boards:
@@ -80,6 +91,7 @@ def main():
         board = supported_boards[board_name]()
 
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
+
         if args.with_ethernet:
             soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
         if args.with_mmcm:
@@ -88,29 +100,23 @@ def main():
             soc.add_rgb_led()
         if args.with_spi:
             soc.add_spi(args.spi_data_width, args.spi_clk_freq)
-        if args.with_i2s:
+        if args.with_i2c:
             soc.add_i2c()
         if args.with_i2s:
             if not args.with_mmcm:
                 print("Adding mmcm implicitly, cause i2s core needs special clk signals")
                 soc.add_mmcm(board.mmcm_freq)
             soc.add_i2s()
-        # this is temporary hack, cause the ddrphy address can be
-        # forced with csr_map
-        if board_name == "arty":
-            soc.csr.locs["ddrphy"]=23
+
         build_dir = os.path.join("build", board_name)
+
         if args.build:
-            builder = Builder(soc, output_dir=build_dir,
-                csr_json=os.path.join(build_dir, "csr.json"))
-        else:
-            builder = Builder(soc, output_dir="build/" + board_name,
-                compile_software=True, compile_gateware=False,
-                csr_json=os.path.join(build_dir, "csr.json"))
-        builder.build()
+            builder = Builder(soc, **builder_argdict(args))
+            builder_kwargs = vivado_build_argdict(args) if args.toolchain == "vivado" else {}
+            builder.build(**builder_kwargs, run=args.build)
 
         if args.load:
-            board.load(soc, filename=os.path.join(build_dir, "gateware", "arty" + board.bitstream_ext))
+            board.load(soc, filename=os.path.join(build_dir, "gateware", "digilent_arty" + board.bitstream_ext))
 
 if __name__ == "__main__":
     main()

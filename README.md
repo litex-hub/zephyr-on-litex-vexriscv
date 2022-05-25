@@ -1,18 +1,22 @@
 Zephyr-on-litex-vexriscv
 ========================
 
+Zephyr on LiteX VexRiscv is a LiteX SoC builder for `litex_vexriscv` platform in Zephyr. Currently it supports [Digilent Arty A7-35T Development Board](https://store.digilentinc.com/arty-a7-artix-7-fpga-development-board-for-makers-and-hobbyists).
+
 Prerequisites
 ------------
-Install the Vivado toolchain. You can download Vivado using this [link](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/archive.html). 
-The 2017.3 or newer version of Vivado is recommended.  
-Get all required submodules:
+
+First, you have to install F4PGA toolchain. It can be done by following instructions in [this tutorial](https://f4pga-examples.readthedocs.io/en/latest/getting.html).
+
+Then, clone and enter Zephyr-on-litex-vexriscv repository:
 
 ```bash
-git submodule update --init --recursive
+git clone https://github.com/litex-hub/zephyr-on-litex-vexriscv.git && cd zephyr-on-litex-vexriscv
 ```
 
-Get all required packages:
+Get all required submodules, packages and run install script:
 ```bash
+git submodule update --init --recursive
 apt-get install build-essential bzip2 python3 python3-dev python3-pip
 ./install.sh
 ```
@@ -21,16 +25,47 @@ Build
 -----
 Build bitstream following these steps:
 
+* Add LiteX to path:
 ```bash
 source ./init
-source ${PATH_TO_VIVADO_TOOLCHAIN}/settings64.sh
-./make.py --board=arty --build --with_mmcm --with_i2s --with_ethernet
 ```
+* Prepare F4PGA environment:
+```bash
+export INSTALL_DIR="path/to/f4pga"
+FPGA_FAM="xc7"
+export PATH="$INSTALL_DIR/$FPGA_FAM/install/bin:$PATH";
+source "$INSTALL_DIR/$FPGA_FAM/conda/etc/profile.d/conda.sh"
+conda activate $FPGA_FAM
+```
+* Finally build the bitstream:
+```bash
+./make.py --board=arty --build
+```
+
+Build options
+-----
+| Option | Help |
+|---|---|
+| --toolchain | FPGA toolchain |
+| --board | FPGA board |
+| --build | build bitstream |
+| --variant | FPGA board variant |
+| --load | load bitstream |
+| --with-ethernet | Enable ethernet |
+| --with_i2s | Enable i2s |
+| --sys-clk-freq | System clock frequency |
+| --with_spi | Enable SPI |
+| --with_i2c | Enable i2c |
+| --with_pwm | Enabe PWM |
+| --spi-data-width | SPI data width |
+| --spi-clk-freq | SPI clock frequency |
+| --with_mmcm | Enable MMCM |
+| --local-ip | local IP address |
+| --remote-ip | remote IP address |
 
 Load bitstream
 --------------
-Connect your board using the serial port then,  
-load bitstream following these steps:
+Connect your board using the serial port and load bitstream:
 
 ```bash
 source ./init
