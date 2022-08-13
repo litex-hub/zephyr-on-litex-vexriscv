@@ -80,7 +80,7 @@ def main():
     soc_kwargs.update(with_jtagbone=False)
 
     if args.variant is not None:
-        soc_kwargs.update(cpu_variant=args.variant)
+        soc_kwargs.update(variant=args.variant)
     if args.sys_clk_freq is not None:
         soc_kwargs.update(sys_clk_freq=int(float(args.sys_clk_freq)))
 
