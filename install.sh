@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-pip3 install --user requests
+pip3 install --user requests packaging
 
 TOOLS_DIR='tools'
 CONDA_DIR="$TOOLS_DIR/conda"
@@ -13,8 +13,7 @@ fi
 mkdir -p "$CONDA_DIR"
 
 wget --no-verbose --continue https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-chmod a+x ./Miniconda3-latest-Linux-x86_64.sh
-./Miniconda3-latest-Linux-x86_64.sh -p "$CONDA_DIR" -b -f || exit 2
+bash Miniconda3-latest-Linux-x86_64.sh -p "$CONDA_DIR" -b -f || exit 2
 rm ./Miniconda3-latest-Linux-x86_64.sh
 
 export PATH="$CONDA_DIR/bin:$PATH"
