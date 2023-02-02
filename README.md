@@ -1,12 +1,13 @@
 Zephyr-on-litex-vexriscv
 ========================
 
-Zephyr on LiteX VexRiscv is a LiteX SoC builder for the `litex_vexriscv` platform in Zephyr. Currently it supports [Digilent Arty A7-35T Development Board](https://store.digilentinc.com/arty-a7-artix-7-fpga-development-board-for-makers-and-hobbyists).
+Zephyr on LiteX VexRiscv is a LiteX SoC builder for the `litex_vexriscv` platform in Zephyr. Currently it supports [Digilent Arty A7-35T Development Board](https://store.digilentinc.com/arty-a7-artix-7-fpga-development-board-for-makers-and-hobbyists) and [SDI MIPI Video Converter](https://github.com/antmicro/sdi-mipi-video-converter).
 
 Prerequisites
 ------------
 
-First, you have to install the F4PGA toolchain. It can be done by following instructions in [this tutorial](https://f4pga-examples.readthedocs.io/en/latest/getting.html).
+First, if you want to run Zephyr on Digilent Arty, you have to install the F4PGA toolchain. It can be done by following instructions in [this tutorial](https://f4pga-examples.readthedocs.io/en/latest/getting.html).
+For SDI MIPI Video Converter - install oxide (yosys+nextpnr) toolchain by following [these instructions](https://github.com/gatecat/prjoxide#getting-started---complete-flow).
 
 Then, clone and enter the Zephyr-on-litex-vexriscv repository:
 
@@ -29,7 +30,7 @@ Build the bitstream by following these steps:
 ```bash
 source ./init
 ```
-* Prepare F4PGA environment:
+* Prepare F4PGA environment (for Digilent Arty target):
 ```bash
 export INSTALL_DIR="path/to/f4pga"
 FPGA_FAM="xc7"
@@ -38,9 +39,15 @@ source "$INSTALL_DIR/$FPGA_FAM/conda/etc/profile.d/conda.sh"
 conda activate $FPGA_FAM
 ```
 * Finally build the bitstream:
-```bash
-./make.py --board=arty --build
-```
+
+    For Digilent Arty board:
+    ```bash
+    ./make.py --board=arty --build
+    ```
+    For SDI MIPI board:
+    ```bash
+    ./make.py --board=sdi_mipi_bridge --build --toolchain=oxide
+    ```
 
 Build options
 -----
@@ -67,7 +74,14 @@ Load bitstream
 --------------
 Connect your board using the serial port and load the bitstream:
 
+For Digilent Arty board:
 ```bash
 source ./init
 ./make.py --board=arty --load
+```
+
+For SDI MIPI board:
+```bash
+source ./init
+./make.py --board=sdi_mipi_bridge --load
 ```
