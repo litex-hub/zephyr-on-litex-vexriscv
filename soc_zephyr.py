@@ -11,7 +11,7 @@ from litex.soc.cores.gpio import *
 from litex.soc.cores.pwm import PWM
 from litex.soc.cores.spi import SPIMaster
 from litex.soc.cores.bitbang import I2CMaster
-# from litex_boards.platforms import arty as arty_platform
+from litex_boards.platforms import digilent_arty as arty_platform
 from litex.soc.cores.gpio import GPIOOut, GPIOIn
 
 from liteeth.phy.mii import LiteEthPHYMII
