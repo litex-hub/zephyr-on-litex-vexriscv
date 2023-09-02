@@ -142,9 +142,6 @@ def main():
         if args.with_i2c:
             soc.add_i2c()
         if args.with_i2s:
-            if not args.with_mmcm:
-                print("Adding mmcm implicitly, cause i2s core needs special clk signals")
-                soc.add_mmcm(board.mmcm_freq)
             soc.add_i2s()
 
         if args.build:
