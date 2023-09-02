@@ -57,6 +57,7 @@ class LitexSim(Board):
         "with_sdram"        : True,
         "uart_name"         : "serial",
         "sim_config"        : SimConfig(),
+        "init_sram"         : "image/boot.json",
     }
     def __init__(self):
         from litex_boards.targets import litex_sim
