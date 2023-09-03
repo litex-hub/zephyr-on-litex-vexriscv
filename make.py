@@ -76,6 +76,20 @@ class SDI_MIPI_Bridge(Board):
         prog = soc.platform.create_programmer(prog="ecpprog")
         prog.load_bitstream(filename)
 
+# Lattice Crosslink-NX EVN -------------------------------------------------------------------------
+
+class LatticeCrosslinkNxEvn(Board):
+    def __init__(self):
+        from litex_boards.targets import lattice_crosslink_nx_evn
+        Board.__init__(self, lattice_crosslink_nx_evn.BaseSoC, soc_capabilities={
+            # Communication
+            "serial",
+        })
+
+    def load(self, soc, filename):
+        prog = soc.platform.create_programmer(prog="ecpprog")
+        prog.load_bitstream(filename)
+
 #---------------------------------------------------------------------------------------------------
 # Build
 #---------------------------------------------------------------------------------------------------
@@ -86,6 +100,7 @@ supported_boards = {
 
     # Lattice
     "sdi_mipi_bridge"             : SDI_MIPI_Bridge,
+    "lattice_crosslink_nx_evn"    : LatticeCrosslinkNxEvn,
 }
 
 def main():
