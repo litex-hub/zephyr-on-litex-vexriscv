@@ -9,9 +9,14 @@ from litex.soc.integration.builder import *
 
 from soc_zephyr import SoCZephyr
 
-# Board definition----------------------------------------------------------------------------------
+n# Board definition ---------------------------------------------------------------------------------
 
 class Board:
+    soc_kwargs = {
+        "integrated_rom_size"  : 0xfa00,
+    }
+    builder_kwargs = {
+    }
     def __init__(self, soc_cls):
         self.soc_cls = soc_cls
         self.mmcm_freq = {}
@@ -93,29 +98,33 @@ def main():
     oxide_args(parser)
     args = parser.parse_args()
 
+    # Board(s) selection ---------------------------------------------------------------------------
     if args.board == "all":
         board_names = list(supported_boards.keys())
     else:
         args.board = args.board.lower()
         board_names = [args.board.replace(" ", "_")]
 
-    soc_kwargs = {"integrated_rom_size": 0xfa00}
-    soc_kwargs.update(toolchain=args.toolchain)
-    soc_kwargs.update(with_jtagbone=False)
-
-    if args.variant is not None:
-        soc_kwargs.update(variant=args.variant)
-    if args.sys_clk_freq is not None:
-        soc_kwargs.update(sys_clk_freq=int(float(args.sys_clk_freq)))
-
     for board_name in board_names:
         if board_name not in supported_boards:
             print("Board {} is not supported currently".format(board_name))
             continue
         board = supported_boards[board_name]()
+        soc_kwargs = Board.soc_kwargs
+        soc_kwargs.update(board.soc_kwargs)
+        soc_kwargs.update(toolchain=args.toolchain)
+        soc_kwargs.update(with_jtagbone=False)
 
+        # SoC parameters ---------------------------------------------------------------------------
+        if args.variant is not None:
+            soc_kwargs.update(variant=args.variant)
+        if args.sys_clk_freq is not None:
+            soc_kwargs.update(sys_clk_freq=int(float(args.sys_clk_freq)))
+
+        # SoC creation -----------------------------------------------------------------------------
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
 
+        # SoC peripherals --------------------------------------------------------------------------
         if args.with_ethernet:
             soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
         if args.with_mmcm:
@@ -131,12 +140,11 @@ def main():
 
         if args.build:
             builder = Builder(soc, **builder_argdict(args))
+            builder_kwargs = board.builder_kwargs
             if args.toolchain == "vivado":
-                builder_kwargs = vivado_build_argdict(args) 
+                builder_kwargs.update(vivado_build_argdict(args))
             elif args.toolchain == "oxide":
-                builder_kwargs = oxide_argdict(args) 
-            else:
-                builder_kwargs = {}
+                builder_kwargs.update(oxide_argdict(args))
             builder.build(**builder_kwargs, run=args.build)
 
         if args.load:
