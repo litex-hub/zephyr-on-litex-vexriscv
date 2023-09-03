@@ -20,8 +20,6 @@ class Board:
     def __init__(self, soc_cls):
         self.soc_cls = soc_cls
         self.mmcm_freq = {}
-        self.bitstream_name=""
-        self.bitstream_ext=""
 
     def load(self, soc, filename):
         prog = soc.platform.create_programmer()
@@ -38,15 +36,11 @@ class Arty(Board):
             "i2s_rx" :  11.289e6,
             "i2s_tx" :  22.579e6,
         }
-        self.bitstream_name="digilent_arty"
-        self.bitstream_ext=".bit"
 
 class SDI_MIPI_Bridge(Board):
     def __init__(self):
         from litex_boards.targets import antmicro_sdi_mipi_video_converter
         Board.__init__(self, antmicro_sdi_mipi_video_converter.BaseSoC)
-        self.bitstream_name="antmicro_sdi_mipi_video_converter"
-        self.bitstream_ext=".bit"
 
     def load(self, soc, filename):
         prog = soc.platform.create_programmer(prog="ecpprog")
@@ -55,16 +49,13 @@ class SDI_MIPI_Bridge(Board):
 class LitexSim(Board):
     soc_kwargs = {
         "with_sdram"        : True,
-        "uart_name"         : "serial",
+        "uart_name"         : "sim",
         "sim_config"        : SimConfig(),
-        "init_sram"         : "image/boot.json",
     }
     def __init__(self):
         from litex_boards.targets import litex_sim
         Board.__init__(self, litex_sim.BaseSoC)
-        self.builder_kwargs = {"sim_config": self.soc_kwargs["sim_config"]}
-        self.bitstream_name="litex_sim"
-        self.bitstream_ext=".bit"
+        self.builder_kwargs["sim_config"] = self.soc_kwargs["sim_config"]
 
 # Main ---------------------------------------------------------------------------------------------
 
@@ -102,6 +93,7 @@ def main():
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server")
+    parser.add_argument("--zephyr-bin", default=None, help="path to the Zephyr kernel")
     builder_args(parser)
     vivado_build_args(parser)
     oxide_args(parser)
@@ -122,6 +114,10 @@ def main():
         soc_kwargs.update(board.soc_kwargs)
         soc_kwargs.update(toolchain=args.toolchain)
         soc_kwargs.update(with_jtagbone=False)
+        soc_kwargs.update(zephyr_bin=args.zephyr_bin)
+        soc_kwargs.update(ram_init=args.zephyr_bin)
+        if args.zephyr_bin:
+            soc_kwargs["integrated_main_ram_size"] = os.path.getsize(args.zephyr_bin)
 
         # SoC parameters ---------------------------------------------------------------------------
         if args.variant is not None:
@@ -155,8 +151,8 @@ def main():
             builder.build(**builder_kwargs, run=args.build)
 
         if args.load:
-            build_dir = os.path.join("build", board.bitstream_name)
-            board.load(soc, filename=os.path.join(build_dir, "gateware", board.bitstream_name + board.bitstream_ext))
+            build_dir = os.path.join("build", board_name)
+            board.load(soc, filename=os.path.join(build_dir, "gateware", board_name + ".bit"))
 
 if __name__ == "__main__":
     main()
