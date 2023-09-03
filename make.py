@@ -3,6 +3,7 @@
 import argparse
 import os
 
+from litex.build.sim.config import SimConfig
 from litex.build.xilinx.vivado import vivado_build_args, vivado_build_argdict
 from litex.build.lattice.oxide import oxide_argdict, oxide_args
 from litex.soc.integration.builder import *
@@ -77,10 +78,35 @@ class SDI_MIPI_Bridge(Board):
         prog.load_bitstream(filename)
 
 #---------------------------------------------------------------------------------------------------
+# LiteX Boards
+#---------------------------------------------------------------------------------------------------
+
+# Simulation ---------------------------------------------------------------------------------------
+
+class LitexSim(Board):
+    soc_kwargs = {
+        "uart_name"         : "serial",
+        "sim_config"        : SimConfig(),
+        "integrated_main_ram_size": 0x10000,
+    }
+    def __init__(self):
+        from litex.tools import litex_sim
+        Board.__init__(self, litex_sim.SimSoC, soc_capabilities={
+            # Communication
+            "serial",
+            # Storage
+            "spiflash",
+        })
+        self.builder_kwargs["sim_config"] = self.soc_kwargs["sim_config"]
+
+#---------------------------------------------------------------------------------------------------
 # Build
 #---------------------------------------------------------------------------------------------------
 
 supported_boards = {
+    # LiteX
+    "litex_sim"                   : LitexSim,
+
     # Xilinx
     "arty"                        : Arty,
 
