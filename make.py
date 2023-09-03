@@ -15,8 +15,6 @@ class Board:
     def __init__(self, soc_cls):
         self.soc_cls = soc_cls
         self.mmcm_freq = {}
-        self.bitstream_name=""
-        self.bitstream_ext=""
 
     def load(self, soc, filename):
         prog = soc.platform.create_programmer()
@@ -39,8 +37,6 @@ class Arty(Board):
             "i2s_rx" :  11.289e6,
             "i2s_tx" :  22.579e6,
         }
-        self.bitstream_name="digilent_arty"
-        self.bitstream_ext=".bit"
 
 #---------------------------------------------------------------------------------------------------
 # Lattice Boards
@@ -52,9 +48,7 @@ class SDI_MIPI_Bridge(Board):
     def __init__(self):
         from litex_boards.targets import antmicro_sdi_mipi_video_converter
         Board.__init__(self, antmicro_sdi_mipi_video_converter.BaseSoC)
-        self.bitstream_name="antmicro_sdi_mipi_video_converter"
-        self.bitstream_ext=".bit"
-    
+
     def load(self, soc, filename):
         prog = soc.platform.create_programmer(prog="ecpprog")
         prog.load_bitstream(filename)
@@ -139,8 +133,6 @@ def main():
                     soc.add_mmcm(board.mmcm_freq)
                 soc.add_i2s()
 
-        build_dir = os.path.join("build", board.bitstream_name)
-
         if args.build:
             builder = Builder(soc, **builder_argdict(args))
             if args.toolchain == "vivado":
@@ -152,7 +144,7 @@ def main():
             builder.build(**builder_kwargs, run=args.build)
 
         if args.load:
-            board.load(soc, filename=os.path.join(build_dir, "gateware", board.bitstream_name + board.bitstream_ext))
+            board.load(filename=builder.get_bitstream_filename(mode="sram"))
 
 if __name__ == "__main__":
     main()
