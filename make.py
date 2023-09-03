@@ -25,6 +25,10 @@ class Board:
     def flash(self):
         raise NotImplementedError
 
+#---------------------------------------------------------------------------------------------------
+# Xilinx Boards
+#---------------------------------------------------------------------------------------------------
+
 # Arty support -------------------------------------------------------------------------------------
 
 class Arty(Board):
@@ -38,6 +42,12 @@ class Arty(Board):
         self.bitstream_name="digilent_arty"
         self.bitstream_ext=".bit"
 
+#---------------------------------------------------------------------------------------------------
+# Lattice Boards
+#---------------------------------------------------------------------------------------------------
+
+# Antmicro SDI/MIPI Video Converter support --------------------------------------------------------
+
 class SDI_MIPI_Bridge(Board):
     def __init__(self):
         from litex_boards.targets import antmicro_sdi_mipi_video_converter
@@ -49,12 +59,16 @@ class SDI_MIPI_Bridge(Board):
         prog = soc.platform.create_programmer(prog="ecpprog")
         prog.load_bitstream(filename)
 
-# Main ---------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------
+# Build
+#---------------------------------------------------------------------------------------------------
 
 supported_boards = {
     # Xilinx
-    "arty":         Arty,
-    "sdi_mipi_bridge":     SDI_MIPI_Bridge,
+    "arty"                        : Arty,
+
+    # Lattice
+    "sdi_mipi_bridge"             : SDI_MIPI_Bridge,
 }
 
 def main():
