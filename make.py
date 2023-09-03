@@ -101,6 +101,7 @@ def main():
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
+    parser.add_argument("--spi-flash-init", default=None, help="path to the Zephyr image file")
     parser.add_argument("--spi-data-width", type=int, default=8,      help="SPI data width (maximum transfered bits per xfer)")
     parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address")
@@ -126,12 +127,15 @@ def main():
         soc_kwargs.update(board.soc_kwargs)
         soc_kwargs.update(toolchain=args.toolchain)
         soc_kwargs.update(with_jtagbone=False)
+        soc_kwargs.update(spi_flash_init=args.spi_flash_init)
 
         # SoC parameters ---------------------------------------------------------------------------
         if args.variant is not None:
             soc_kwargs.update(variant=args.variant)
         if args.sys_clk_freq is not None:
             soc_kwargs.update(sys_clk_freq=int(float(args.sys_clk_freq)))
+        if "spiflash" in board.soc_capabilities:
+            soc_kwargs.update(with_spi_flash=True)
 
         # SoC creation -----------------------------------------------------------------------------
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
