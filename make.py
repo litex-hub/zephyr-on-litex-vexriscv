@@ -9,7 +9,7 @@ from litex.soc.integration.builder import *
 
 from soc_zephyr import SoCZephyr
 
-n# Board definition ---------------------------------------------------------------------------------
+# Board definition ---------------------------------------------------------------------------------
 
 class Board:
     soc_kwargs = {
@@ -17,8 +17,9 @@ class Board:
     }
     builder_kwargs = {
     }
-    def __init__(self, soc_cls):
+    def __init__(self, soc_cls, soc_capabilities={}):
         self.soc_cls = soc_cls
+        self.soc_capabilities = soc_capabilities
         self.mmcm_freq = {}
 
     def load(self, soc, filename):
@@ -37,7 +38,21 @@ class Board:
 class Arty(Board):
     def __init__(self):
         from litex_boards.targets import digilent_arty
-        Board.__init__(self, digilent_arty.BaseSoC)
+        Board.__init__(self, digilent_arty.BaseSoC, soc_capabilities={
+            # Communication
+            "serial",
+            "ethernet",
+            # Storage
+            "spiflash",
+            # GPIOs
+            "rgb_led",
+            # Buses
+            "spi",
+            "i2c",
+            "i2s",
+            # 7-Series specific
+            "mmcm",
+        })
         self.mmcm_freq = {
             "i2s_rx" :  11.289e6,
             "i2s_tx" :  22.579e6,
@@ -52,7 +67,10 @@ class Arty(Board):
 class SDI_MIPI_Bridge(Board):
     def __init__(self):
         from litex_boards.targets import antmicro_sdi_mipi_video_converter
-        Board.__init__(self, antmicro_sdi_mipi_video_converter.BaseSoC)
+        Board.__init__(self, antmicro_sdi_mipi_video_converter.BaseSoC, soc_capabilities={
+            # Communication
+            "serial",
+        })
 
     def load(self, soc, filename):
         prog = soc.platform.create_programmer(prog="ecpprog")
@@ -82,15 +100,9 @@ def main():
     parser.add_argument("--build", action="store_true", help="build bitstream")
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
-    parser.add_argument("--with_ethernet", action="store_true", help="Enable Ethernet")
-    parser.add_argument("--with_i2s", action="store_true", help="Enable I2S")
     parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
-    parser.add_argument("--with_spi", action="store_true", help="Enable SPI")
-    parser.add_argument("--with_i2c", action="store_true", help="Enable I2C")
-    parser.add_argument("--with_pwm", action="store_true", help="Enable PWM")
     parser.add_argument("--spi-data-width", type=int, default=8,      help="SPI data width (maximum transfered bits per xfer)")
     parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency")
-    parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server")
     builder_args(parser)
@@ -125,17 +137,17 @@ def main():
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
 
         # SoC peripherals --------------------------------------------------------------------------
-        if args.with_ethernet:
+        if "ethernet" in board.soc_capabilities:
             soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
-        if args.with_mmcm:
+        if "mmcm" in board.soc_capabilities:
             soc.add_mmcm(board.mmcm_freq)
-        if args.with_pwm:
+        if "rgb_led" in board.soc_capabilities:
             soc.add_rgb_led()
-        if args.with_spi:
+        if "spi" in board.soc_capabilities:
             soc.add_spi(args.spi_data_width, args.spi_clk_freq)
-        if args.with_i2c:
+        if "i2c" in board.soc_capabilities:
             soc.add_i2c()
-        if args.with_i2s:
+        if "i2s" in board.soc_capabilities:
             soc.add_i2s()
 
         if args.build:
