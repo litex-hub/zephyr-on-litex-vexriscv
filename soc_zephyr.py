@@ -82,10 +82,6 @@ def SoCZephyr(soc_cls, **kwargs):
                 **kwargs)
             soc_cls.mem_map.update(self.mem_map_zephyr)
 
-        def add_spi(self, data_width, spi_clk_freq):
-            spi_pads = self.platform.request("spi", 0)
-            self.submodules.spi = SPIMaster(spi_pads, data_width, self.clk_freq, spi_clk_freq)
-
         def add_rgb_led(self):
             rgb_led_pads = self.platform.request("rgb_led", 0)
             setattr(self.submodules, "rgb_led_r0", PWM(getattr(rgb_led_pads, 'r')))

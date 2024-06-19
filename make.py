@@ -118,7 +118,7 @@ def main():
             if args.with_pwm:
                 soc.add_rgb_led()
             if args.with_spi:
-                soc.add_spi(args.spi_data_width, args.spi_clk_freq)
+                soc.add_spi_master(name="spi", data_width=args.spi_data_width, spi_clk_freq=args.spi_clk_freq)
             if args.with_spi_flash:
                 from litespi.modules import S25FL128L
                 from litespi.opcodes import SpiNorFlashOpCodes as Codes
