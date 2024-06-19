@@ -73,10 +73,12 @@ def main():
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s (Arty target only)")
     parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
     parser.add_argument("--with_spi", action="store_true", help="Enable spi (Arty target only)")
+    parser.add_argument("--with_spi_flash", action="store_true", help="Enable spi flash (Arty target only)")
     parser.add_argument("--with_i2c", action="store_true", help="Enable i2c (Arty target only)")
     parser.add_argument("--with_pwm", action="store_true", help="Enable pwm (Arty target only)")
     parser.add_argument("--spi-data-width", type=int, default=8,      help="SPI data width (maximum transfered bits per xfer, Arty target only)")
     parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency (Arty target only)")
+    parser.add_argument("--spi_flash_rate", default="1:1", help="SPI flash rate, can be 1:1 or 1:2 (Arty target only)")
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm (Arty target only)")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address (Arty target only)")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server (Arty target only)")
@@ -117,6 +119,11 @@ def main():
                 soc.add_rgb_led()
             if args.with_spi:
                 soc.add_spi(args.spi_data_width, args.spi_clk_freq)
+            if args.with_spi_flash:
+                from litespi.modules import S25FL128L
+                from litespi.opcodes import SpiNorFlashOpCodes as Codes
+                assert  args.spi_flash_rate in ["1:1", "1:2"]
+                soc.add_spi_flash(mode="4x", module=S25FL128L(Codes.READ_1_1_4), rate=args.spi_flash_rate, with_master=True)
             if args.with_i2c:
                 soc.add_i2c()
             if args.with_i2s:

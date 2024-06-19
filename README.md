@@ -62,10 +62,12 @@ Build options
 | --with_i2s | Enable i2s |
 | --sys-clk-freq | System clock frequency |
 | --with_spi | Enable SPI |
+| --with_spi_flash | Enable SPI flash |
 | --with_i2c | Enable i2c |
 | --with_pwm | Enable PWM |
 | --spi-data-width | SPI data width |
 | --spi-clk-freq | SPI clock frequency |
+| --spi_flash_rate | SPI flash rate |
 | --with_mmcm | Enable MMCM |
 | --local-ip | local IP address |
 | --remote-ip | remote IP address |
