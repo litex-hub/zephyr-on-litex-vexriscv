@@ -80,6 +80,9 @@ def main():
     parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency (Arty target only)")
     parser.add_argument("--spi_flash_rate", default="1:1", help="SPI flash rate, can be 1:1 or 1:2 (Arty target only)")
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm (Arty target only)")
+    parser.add_argument("--with_watchdog", action="store_true", help="Enable watchdog")
+    parser.add_argument("--watchdog_width", type=int, default=32, help="Watchdog width")
+    parser.add_argument("--watchdog_reset_delay", type=int, default=None, help="Watchdog reset delay")
     parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address (Arty target only)")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server (Arty target only)")
     builder_args(parser)
@@ -109,6 +112,9 @@ def main():
         board = supported_boards[board_name]()
 
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
+
+        if args.with_watchdog:
+            soc.add_watchdog(name="watchdog0" ,width=args.watchdog_width, reset_delay=args.watchdog_reset_delay)
 
         if board_name == "arty":
             if args.with_ethernet:

@@ -51,6 +51,7 @@ def SoCZephyr(soc_cls, **kwargs):
             "ddrphy":     23, # addr: 0xe000b800
             "spiflash_core":   24, # addr: 0xe000c000
             "spiflash_phy":    25, # addr: 0xe000c800
+            "watchdog0":  26, # addr: 0xe000d000
         }}
 
         interrupt_map = {**soc_cls.interrupt_map, **{
@@ -59,6 +60,7 @@ def SoCZephyr(soc_cls, **kwargs):
             "ethmac":     3,
             "i2s_rx":     6,
             "i2s_tx":     7,
+            "watchdog0":  8,
         }}
 
         mem_map_zephyr = {
