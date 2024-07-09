@@ -143,49 +143,4 @@ def SoCZephyr(soc_cls, **kwargs):
             self.mmcm.expose_drp()
             self.comb += self.mmcm.reset.eq(self.mmcm.drp_reset.re)
 
-        def add_eth(self, local_ip, remote_ip):
-            local_ip = local_ip.split(".")
-            remote_ip = remote_ip.split(".")
-
-            self.add_constant("LOCALIP1", int(local_ip[0]))
-            self.add_constant("LOCALIP2", int(local_ip[1]))
-            self.add_constant("LOCALIP3", int(local_ip[2]))
-            self.add_constant("LOCALIP4", int(local_ip[3]))
-
-            self.add_constant("REMOTEIP1", int(remote_ip[0]))
-            self.add_constant("REMOTEIP2", int(remote_ip[1]))
-            self.add_constant("REMOTEIP3", int(remote_ip[2]))
-            self.add_constant("REMOTEIP4", int(remote_ip[3]))
-            self.submodules.ethphy = LiteEthPHYMII(
-                clock_pads = self.platform.request("eth_clocks"),
-                pads       = self.platform.request("eth"))
-            phy = self.ethphy
-            # Imports
-            from liteeth.mac import LiteEthMAC
-            # MAC
-            ethmac = LiteEthMAC(
-                phy=phy,
-                dw=32,
-                interface="wishbone",
-                endianness=self.cpu.endianness)
-
-            self.submodules.ethmac = ethmac
-            name="ethmac"
-            ethmac_region=SoCRegion(origin=self.mem_map_zephyr.get(name, None), size=0x2000, cached=False)
-            self.bus.add_slave(name=name, slave=ethmac.bus, region=ethmac_region)
-
-            # Timing constraints
-            if hasattr(phy, "crg"):
-                eth_rx_clk = phy.crg.cd_eth_rx.clk
-                eth_tx_clk = phy.crg.cd_eth_tx.clk
-            else:
-                eth_rx_clk = phy.cd_eth_rx.clk
-                eth_tx_clk = phy.cd_eth_tx.clk
-            self.platform.add_period_constraint(eth_rx_clk, 1e9/phy.rx_clk_freq)
-            self.platform.add_period_constraint(eth_tx_clk, 1e9/phy.tx_clk_freq)
-            self.platform.add_false_path_constraints(
-                self.crg.cd_sys.clk,
-                eth_rx_clk,
-                eth_tx_clk)
-
     return _SoCZephyr(**kwargs)

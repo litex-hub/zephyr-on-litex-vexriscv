@@ -71,6 +71,7 @@ def main():
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet (Arty target only)")
+    parser.add_argument("--with_etherbone", action="store_true", help="Enable etherbone (Arty target only)")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s (Arty target only)")
     parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
     parser.add_argument("--with_spi", action="store_true", help="Enable spi (Arty target only)")
@@ -84,7 +85,8 @@ def main():
     parser.add_argument("--with_watchdog", action="store_true", help="Enable watchdog")
     parser.add_argument("--watchdog_width", type=int, default=32, help="Watchdog width")
     parser.add_argument("--watchdog_reset_delay", type=int, default=None, help="Watchdog reset delay")
-    parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address (Arty target only)")
+    parser.add_argument("--etherbone-ip", default="192.168.1.50", help="etherbone IP address (Arty target only)")
+    parser.add_argument("--local-ip", default="192.168.1.51", help="local IP address (Arty target only)")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server (Arty target only)")
     builder_args(parser)
     vivado_build_args(parser)
@@ -118,8 +120,15 @@ def main():
             soc.add_watchdog(name="watchdog0" ,width=args.watchdog_width, reset_delay=args.watchdog_reset_delay)
 
         if board_name == "arty":
-            if args.with_ethernet:
-                soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
+            if args.with_ethernet or args.with_etherbone:
+                from liteeth.phy.mii import LiteEthPHYMII
+                soc.ethphy = LiteEthPHYMII(
+                    clock_pads = soc.platform.request("eth_clocks"),
+                    pads       = soc.platform.request("eth"))
+                if args.with_etherbone:
+                    soc.add_etherbone(phy=soc.ethphy, ip_address=args.etherbone_ip, with_ethmac=args.with_ethernet, ethmac_local_ip=args.local_ip, ethmac_remote_ip=args.remote_ip)
+                elif args.with_ethernet:
+                    soc.add_ethernet(phy=soc.ethphy, local_ip=args.local_ip, remote_ip=args.remote_ip)
             if args.with_mmcm:
                 soc.add_mmcm(board.mmcm_freq)
             if args.with_pwm:
