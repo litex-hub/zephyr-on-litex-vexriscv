@@ -67,6 +67,7 @@ def main():
     parser.add_argument("--toolchain", default="symbiflow", help="FPGA toolchain - vivado, symbiflow or oxide (yosys+nextpnr).")
     parser.add_argument("--board", required=True, help="FPGA board")
     parser.add_argument("--build", action="store_true", help="build bitstream")
+    parser.add_argument("--flash", action="store_true", help="Flash bitstream.")
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet (Arty target only)")
@@ -152,6 +153,10 @@ def main():
 
         if args.load:
             board.load(soc, filename=os.path.join(build_dir, "gateware", board.bitstream_name + board.bitstream_ext))
+        
+        if args.flash:
+            prog = soc.platform.create_programmer()
+            prog.flash(0, os.path.join(build_dir, "gateware", board.bitstream_name + board.bitstream_ext))
 
 if __name__ == "__main__":
     main()
