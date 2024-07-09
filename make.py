@@ -70,6 +70,7 @@ def main():
     parser.add_argument("--flash", action="store_true", help="Flash bitstream.")
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
+    parser.add_argument("--with_all", action="store_true", help="Enable all peripherals")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet (Arty target only)")
     parser.add_argument("--with_etherbone", action="store_true", help="Enable etherbone (Arty target only)")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s (Arty target only)")
@@ -92,6 +93,17 @@ def main():
     vivado_build_args(parser)
     oxide_args(parser)
     args = parser.parse_args()
+
+    if args.with_all:
+        args.with_ethernet = True
+        args.with_etherbone = True
+        args.with_i2s = True
+        args.with_spi = True
+        args.with_spi_flash = True
+        args.with_i2c = True
+        args.with_pwm = True
+        args.with_mmcm = True
+        args.with_watchdog = True
 
     if args.board == "all":
         board_names = list(supported_boards.keys())
