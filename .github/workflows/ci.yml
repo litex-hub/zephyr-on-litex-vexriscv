@@ -6,7 +6,7 @@ jobs:
   Bitstream-build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with: 
           submodules: recursive
       
@@ -38,7 +38,7 @@ jobs:
       - name: Generate dts and config
         run: ./third_party/litex/litex/tools/litex_json2dts_zephyr.py --dts overlay.dts --config overlay.config csr.json
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}
           path: |
@@ -50,9 +50,9 @@ jobs:
     runs-on: ubuntu-22.04
     needs: Bitstream-build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: Bitstream-build
 
