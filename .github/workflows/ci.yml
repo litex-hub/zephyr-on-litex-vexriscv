@@ -6,7 +6,7 @@ jobs:
   Bitstream-build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with: 
           submodules: recursive
       
@@ -14,51 +14,31 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip bzip2 cmake build-essential clang bison flex tcl-dev libffi-dev mercurial graphviz xdot pkg-config python3 libftdi-dev python3-dev libeigen3-dev zlib1g-dev
-          sudo apt update
           sudo apt-get install -y libboost-dev libboost-filesystem-dev libboost-thread-dev libboost-program-options-dev libboost-iostreams-dev libboost-dev libboost-system-dev libboost-python-dev libboost-filesystem-dev
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          ./install.sh
+          sudo apt-get install -y gcc-riscv64-unknown-elf
         
-      - name: Install yosys
+      - name: Install OSS CAD tools
         run: |
-          git clone https://github.com/YosysHQ/yosys.git
-          cd yosys
-          make config-gcc
-          make -j`nproc`
-          sudo make install
-          cd ..
-          rm -rf yosys
-
-      - name: Install prjoxide
-        run: |
-          git clone --recursive https://github.com/gatecat/prjoxide
-          cd prjoxide/libprjoxide
-          export PATH=$HOME/.cargo/bin:$PATH
-          cargo install --path prjoxide
-          cd ../../
-          rm -rf prjoxide
-
-      - name: Install nextpnr
-        run: |
-          git clone --recursive https://github.com/YosysHQ/nextpnr
-          cd nextpnr
-          cmake -DARCH=nexus -DOXIDE_INSTALL_PREFIX=$HOME/.cargo .
-          make -j`nproc`
-          sudo make install
-          cd ..
-          rm -rf nextpnr
+          curl -s https://api.github.com/repos/YosysHQ/oss-cad-suite-build/releases/latest \
+            | grep "browser_download_url.*oss-cad-suite-linux-x64-" \
+            | cut -d : -f 2,3 \
+            | tr -d \" \
+            | wget -qi -
+          tar -xf oss-cad-suite-linux-x64-*.tgz
+          rm -v oss-cad-suite-linux-x64-*.tgz
         
       - name: Build bitstream
         run: |
+          source oss-cad-suite/environment
           source ./init
-          pip3 install packaging
+          pip3 install packaging meson ninja
           echo $PATH
-          ./make.py --board=sdi_mipi_bridge --toolchain=oxide --build --csr-json csr.json
+          ./make.py --board=sdi_mipi_bridge --toolchain=oxide --build --csr-json csr.json --with_all
       
       - name: Generate dts and config
         run: ./third_party/litex/litex/tools/litex_json2dts_zephyr.py --dts overlay.dts --config overlay.config csr.json
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}
           path: |
@@ -70,9 +50,9 @@ jobs:
     runs-on: ubuntu-22.04
     needs: Bitstream-build
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: Bitstream-build
 
@@ -85,9 +65,7 @@ jobs:
 
       - name: Download Zephyr SDK
         run: |
-          wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.15.0/zephyr-sdk-0.15.0_linux-x86_64.tar.gz
-          tar xvf zephyr-sdk-0.15.0_linux-x86_64.tar.gz
-          rm -v zephyr-sdk-0.15.0_linux-x86_64.tar.gz
+          wget -q -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64.tar.xz | tar -J -xf -
 
       - name: Prepare Zephyr
         run: |
@@ -101,13 +79,13 @@ jobs:
 
       - name: Install Zephyr SDK
         run: |
-          cd zephyr-sdk-0.15.0/
+          cd zephyr-sdk-*
           ./setup.sh -h -t riscv64-zephyr-elf
           cd ../
 
       - name: Build Zephyr App
         run: |
-          export CMAKE_PREFIX_PATH=$PWD/zephyr-sdk-0.15.0
+          export ZEPHYR_SDK_INSTALL_DIR=$PWD
           cd zephyrproject/zephyr
           cat ../../Bitstream-build/overlay.config | xargs west build -b litex_vexriscv samples/philosophers/ -- -DDTC_OVERLAY_FILE= ../../Bitstream-build/overlay.dts
           cd ../../

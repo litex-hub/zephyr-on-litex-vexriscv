@@ -67,23 +67,43 @@ def main():
     parser.add_argument("--toolchain", default="symbiflow", help="FPGA toolchain - vivado, symbiflow or oxide (yosys+nextpnr).")
     parser.add_argument("--board", required=True, help="FPGA board")
     parser.add_argument("--build", action="store_true", help="build bitstream")
+    parser.add_argument("--flash", action="store_true", help="Flash bitstream.")
     parser.add_argument("--variant", default=None, help="FPGA board variant")
     parser.add_argument("--load", action="store_true", help="load bitstream (to SRAM). set path to bitstream")
+    parser.add_argument("--with_all", action="store_true", help="Enable all peripherals")
     parser.add_argument("--with_ethernet", action="store_true", help="Enable ethernet (Arty target only)")
+    parser.add_argument("--with_etherbone", action="store_true", help="Enable etherbone (Arty target only)")
     parser.add_argument("--with_i2s", action="store_true", help="Enable i2s (Arty target only)")
     parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
     parser.add_argument("--with_spi", action="store_true", help="Enable spi (Arty target only)")
+    parser.add_argument("--with_spi_flash", action="store_true", help="Enable spi flash (Arty target only)")
     parser.add_argument("--with_i2c", action="store_true", help="Enable i2c (Arty target only)")
     parser.add_argument("--with_pwm", action="store_true", help="Enable pwm (Arty target only)")
     parser.add_argument("--spi-data-width", type=int, default=8,      help="SPI data width (maximum transfered bits per xfer, Arty target only)")
     parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency (Arty target only)")
+    parser.add_argument("--spi_flash_rate", default="1:1", help="SPI flash rate, can be 1:1 or 1:2 (Arty target only)")
     parser.add_argument("--with_mmcm", action="store_true", help="Enable mmcm (Arty target only)")
-    parser.add_argument("--local-ip", default="192.168.1.50", help="local IP address (Arty target only)")
+    parser.add_argument("--with_watchdog", action="store_true", help="Enable watchdog")
+    parser.add_argument("--watchdog_width", type=int, default=32, help="Watchdog width")
+    parser.add_argument("--watchdog_reset_delay", type=int, default=None, help="Watchdog reset delay")
+    parser.add_argument("--etherbone-ip", default="192.168.1.50", help="etherbone IP address (Arty target only)")
+    parser.add_argument("--local-ip", default="192.168.1.51", help="local IP address (Arty target only)")
     parser.add_argument("--remote-ip", default="192.168.1.100", help="remote IP address of TFTP server (Arty target only)")
     builder_args(parser)
     vivado_build_args(parser)
     oxide_args(parser)
     args = parser.parse_args()
+
+    if args.with_all:
+        args.with_ethernet = True
+        args.with_etherbone = True
+        args.with_i2s = True
+        args.with_spi = True
+        args.with_spi_flash = True
+        args.with_i2c = True
+        args.with_pwm = True
+        args.with_mmcm = True
+        args.with_watchdog = True
 
     if args.board == "all":
         board_names = list(supported_boards.keys())
@@ -108,15 +128,30 @@ def main():
 
         soc = SoCZephyr(board.soc_cls, **soc_kwargs)
 
+        if args.with_watchdog:
+            soc.add_watchdog(name="watchdog0" ,width=args.watchdog_width, reset_delay=args.watchdog_reset_delay)
+
         if board_name == "arty":
-            if args.with_ethernet:
-                soc.add_eth(local_ip=args.local_ip, remote_ip=args.remote_ip)
+            if args.with_ethernet or args.with_etherbone:
+                from liteeth.phy.mii import LiteEthPHYMII
+                soc.ethphy = LiteEthPHYMII(
+                    clock_pads = soc.platform.request("eth_clocks"),
+                    pads       = soc.platform.request("eth"))
+                if args.with_etherbone:
+                    soc.add_etherbone(phy=soc.ethphy, ip_address=args.etherbone_ip, with_ethmac=args.with_ethernet, ethmac_local_ip=args.local_ip, ethmac_remote_ip=args.remote_ip)
+                elif args.with_ethernet:
+                    soc.add_ethernet(phy=soc.ethphy, local_ip=args.local_ip, remote_ip=args.remote_ip)
             if args.with_mmcm:
                 soc.add_mmcm(board.mmcm_freq)
             if args.with_pwm:
                 soc.add_rgb_led()
             if args.with_spi:
-                soc.add_spi(args.spi_data_width, args.spi_clk_freq)
+                soc.add_spi_master(name="spi", data_width=args.spi_data_width, spi_clk_freq=args.spi_clk_freq)
+            if args.with_spi_flash:
+                from litespi.modules import S25FL128L
+                from litespi.opcodes import SpiNorFlashOpCodes as Codes
+                assert  args.spi_flash_rate in ["1:1", "1:2"]
+                soc.add_spi_flash(mode="4x", module=S25FL128L(Codes.READ_1_1_4), rate=args.spi_flash_rate, with_master=True)
             if args.with_i2c:
                 soc.add_i2c()
             if args.with_i2s:
@@ -139,6 +174,10 @@ def main():
 
         if args.load:
             board.load(soc, filename=os.path.join(build_dir, "gateware", board.bitstream_name + board.bitstream_ext))
+        
+        if args.flash:
+            prog = soc.platform.create_programmer()
+            prog.flash(0, os.path.join(build_dir, "gateware", board.bitstream_name + board.bitstream_ext))
 
 if __name__ == "__main__":
     main()
