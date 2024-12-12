@@ -1,7 +1,7 @@
 export PATH="${PWD}/third_party/litex/litex/tools:$PATH"
 export PATH="${PWD}/tools/conda/bin:$PATH"
 
-directories=(litedram liteeth liteiclink litepcie litespi litesata litescope litevideo litex litex-boards litex-renode migen nmigen pythondata-cpu-vexriscv pythondata-software-compiler_rt pythondata-software-picolibc)
+directories=(litedram liteeth litei2c liteiclink litepcie litespi litesata litescope litevideo litex litex-boards litex-renode migen nmigen pythondata-cpu-vexriscv pythondata-software-compiler_rt pythondata-software-picolibc)
 
 for directory in "${directories[@]}";
 do

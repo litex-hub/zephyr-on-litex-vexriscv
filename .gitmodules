@@ -49,3 +49,6 @@
 [submodule "third_party/pythondata-software-picolibc"]
 	path = third_party/pythondata-software-picolibc
 	url = https://github.com/litex-hub/pythondata-software-picolibc.git
+[submodule "third_party/litei2c"]
+	path = third_party/litei2c
+	url = https://github.com/litex-hub/litei2c

@@ -52,6 +52,7 @@ def SoCZephyr(soc_cls, **kwargs):
             "spiflash_core":   24, # addr: 0xe000c000
             "spiflash_phy":    25, # addr: 0xe000c800
             "watchdog0":  26, # addr: 0xe000d000
+            "litei2c":    27, # addr: 0xe000d800
         }}
 
         interrupt_map = {**soc_cls.interrupt_map, **{
