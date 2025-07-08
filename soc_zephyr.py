@@ -49,8 +49,7 @@ def SoCZephyr(soc_cls, **kwargs):
             "i2s_rx":     21, # addr: 0xe000a800
             "i2s_tx":     22, # addr: 0xe000b000
             "ddrphy":     23, # addr: 0xe000b800
-            "spiflash_core":   24, # addr: 0xe000c000
-            "spiflash_phy":    25, # addr: 0xe000c800
+            "spiflash":   24, # addr: 0xe000c000
             "watchdog0":  26, # addr: 0xe000d000
             "litei2c":    27, # addr: 0xe000d800
         }}
