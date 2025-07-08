@@ -61,6 +61,8 @@ def SoCZephyr(soc_cls, **kwargs):
             "i2s_rx":     6,
             "i2s_tx":     7,
             "watchdog0":  8,
+            "spiflash":   9,
+            "litei2c":   10,
         }}
 
         mem_map_zephyr = {
