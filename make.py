@@ -77,7 +77,9 @@ def main():
     parser.add_argument("--sys-clk-freq", default=100e6, help="System clock frequency.")
     parser.add_argument("--with_spi", action="store_true", help="Enable spi (Arty target only)")
     parser.add_argument("--with_spi_flash", action="store_true", help="Enable spi flash (Arty target only)")
-    parser.add_argument("--with_i2c", action="store_true", help="Enable i2c (Arty target only)")
+    i2copts = parser.add_mutually_exclusive_group()
+    i2copts.add_argument("--with_i2c", action="store_true", help="Enable i2c (Arty target only)")
+    i2copts.add_argument("--with_litei2c", action="store_true", help="Enable i2c via litei2c (Arty target only)")
     parser.add_argument("--with_pwm", action="store_true", help="Enable pwm (Arty target only)")
     parser.add_argument("--spi-data-width", type=int, default=8,      help="SPI data width (maximum transfered bits per xfer, Arty target only)")
     parser.add_argument("--spi-clk-freq",   type=int, default=1e6,    help="SPI clock frequency (Arty target only)")
@@ -154,6 +156,8 @@ def main():
                 soc.add_spi_flash(mode="4x", module=S25FL128L(Codes.READ_1_1_4), rate=args.spi_flash_rate, with_master=True)
             if args.with_i2c:
                 soc.add_i2c()
+            if args.with_litei2c:
+                soc.add_i2c_master(name="litei2c", pads=soc.platform.request("i2c", 0))
             if args.with_i2s:
                 if not args.with_mmcm:
                     print("Adding mmcm implicitly, cause i2s core needs special clk signals")

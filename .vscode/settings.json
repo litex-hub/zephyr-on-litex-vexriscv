@@ -1,0 +1,14 @@
+{
+        "python.analysis.extraPaths": [
+                "./third_party/migen",
+                "./third_party/litex",
+                "./third_party/litex-boards",
+                "./third_party/litei2c",
+                "./third_party/litespi",
+                "./third_party/litedram",
+                "./third_party/liteeth",
+                "./third_party/litepcie",
+                "./third_party/litevideo",
+                "./third_party/litescope"
+        ]
+}

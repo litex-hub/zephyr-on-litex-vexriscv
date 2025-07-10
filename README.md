@@ -32,10 +32,10 @@ source ./init
 ```
 * Prepare F4PGA environment (for Digilent Arty target):
 ```bash
-export INSTALL_DIR="path/to/f4pga"
+export F4PGA_INSTALL_DIR="path/to/f4pga"
 FPGA_FAM="xc7"
-export PATH="$INSTALL_DIR/$FPGA_FAM/install/bin:$PATH";
-source "$INSTALL_DIR/$FPGA_FAM/conda/etc/profile.d/conda.sh"
+export PATH="$F4PGA_INSTALL_DIR/$FPGA_FAM/install/bin:$PATH";
+source "$F4PGA_INSTALL_DIR/$FPGA_FAM/conda/etc/profile.d/conda.sh"
 conda activate $FPGA_FAM
 ```
 * Finally build the bitstream:
@@ -63,7 +63,8 @@ Build options
 | --sys-clk-freq | System clock frequency |
 | --with_spi | Enable SPI |
 | --with_spi_flash | Enable SPI flash |
-| --with_i2c | Enable i2c |
+| --with_i2c | Enable I2C (bitbang driver) |
+| --with_litei2c | Enable I2C via [LiteI2C](https://github.com/litex-hub/litei2c) |
 | --with_pwm | Enable PWM |
 | --spi-data-width | SPI data width |
 | --spi-clk-freq | SPI clock frequency |

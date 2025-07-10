@@ -47,11 +47,9 @@ jobs:
             ./overlay.config
 
   Zephyr-build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: Bitstream-build
     steps:
-      - uses: actions/checkout@v4
-      
       - uses: actions/download-artifact@v4
         with:
           name: Bitstream-build
@@ -59,38 +57,45 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt-get install -y --no-install-recommends ninja-build gperf ccache dfu-util device-tree-compiler libssl-dev gcc g++ python3-dev python3-pip
-          sudo apt update
-          sudo apt-get install -y --no-install-recommends python3-setuptools python3-tk python3-wheel xz-utils file  make gcc gcc-multilib g++-multilib libmagic1 libsdl2-dev
+          sudo apt-get install -y --no-install-recommends git cmake ninja-build gperf \
+            ccache dfu-util device-tree-compiler wget \
+            python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
+            make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 python3-venv
 
-      - name: Download Zephyr SDK
+      - name: Create Python virtual environment
         run: |
-          wget -q -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.16.8/zephyr-sdk-0.16.8_linux-x86_64.tar.xz | tar -J -xf -
+          python3 -m venv .venv
+          source .venv/bin/activate
+          echo "VIRTUAL_ENV=${VIRTUAL_ENV}" >> $GITHUB_ENV
+          echo "${VIRTUAL_ENV}/bin" >> $GITHUB_PATH
+        shell: bash
 
       - name: Prepare Zephyr
         run: |
-          pip3 install west
+          pip install west
           west init zephyrproject
           cd zephyrproject/
+          west config manifest.group-filter -- -hal,-tools,-bootloader,-babblesim
+          west config manifest.project-filter -- -nrf_hw_models
+          west config --global update.narrow true
           west update
           west zephyr-export
-          pip3 install -r zephyr/scripts/requirements.txt
+          west packages pip --install
           cd ..
 
       - name: Install Zephyr SDK
         run: |
-          cd zephyr-sdk-*
-          ./setup.sh -h -t riscv64-zephyr-elf
-          cd ../
+          cd zephyrproject/zephyr
+          west sdk install -H -t riscv64-zephyr-elf
+          cd ../../
 
       - name: Build Zephyr App
         run: |
-          export ZEPHYR_SDK_INSTALL_DIR=$PWD
           cd zephyrproject/zephyr
           cat ../../Bitstream-build/overlay.config | xargs west build -b litex_vexriscv samples/philosophers/ -- -DDTC_OVERLAY_FILE= ../../Bitstream-build/overlay.dts
           cd ../../
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}
           path: ./zephyrproject/zephyr/build/zephyr/zephyr.bin
